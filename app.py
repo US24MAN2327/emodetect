@@ -5,6 +5,8 @@ from PIL import Image
 import plotly.graph_objects as go
 from keras.models import load_model  # Modified import
 import time
+import transformers
+from transformers import AutoModelForCausalLM
 
 # Set page config
 st.set_page_config(page_title="Emotion Classifier", layout="wide")
@@ -32,7 +34,11 @@ st.markdown('<h1 class="fade-in" style="text-align: center; color: white;">Emoti
 try:
     with st.spinner('Loading model from file...'):
         # Load the pre-trained model from the local file 'seq.keras'
-        model_file = "seq.keras"  # Path to your model file
+        model_name = "musr/seqkeras"
+        model_file = AutoModelForCausalLM.from_pretrained(model_name,
+                                                    device_map="auto", # automatically figures out how to best use CPU + GPU for loading model
+                                                    trust_remote_code=False, # prevents running custom model files on your machine
+                                                    revision="main") # which version of model to use in repo  # Path to your model file
         resnet34 = load_model(model_file)
         st.success('Model loaded successfully from seq.keras!')
 except Exception as e:
