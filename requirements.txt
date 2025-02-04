@@ -4,4 +4,4 @@ tensorflow
 pillow
 plotly
 keras
-transformers
+transformers==4.31.0
