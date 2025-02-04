@@ -4,3 +4,4 @@ tensorflow
 pillow
 plotly
 keras
+transformers
