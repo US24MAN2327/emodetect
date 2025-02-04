@@ -3,10 +3,8 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 import plotly.graph_objects as go
-from keras.models import load_model  # Modified import
+from transformers import TFAutoModelForSequenceClassification  # For loading TensorFlow models from Hugging Face
 import time
-import transformers
-from transformers import AutoModelForCausalLM
 
 # Set page config
 st.set_page_config(page_title="Emotion Classifier", layout="wide")
@@ -30,17 +28,13 @@ st.markdown("""
 # Title with animation
 st.markdown('<h1 class="fade-in" style="text-align: center; color: white;">Emotion Classifier</h1>', unsafe_allow_html=True)
 
-# Load the model from local file 'seq.keras'
+# Load the model from Hugging Face
 try:
-    with st.spinner('Loading model from file...'):
-        # Load the pre-trained model from the local file 'seq.keras'
-        model_name = "musr/seqkeras"
-        model_file = AutoModelForCausalLM.from_pretrained(model_name,
-                                                    device_map="auto", # automatically figures out how to best use CPU + GPU for loading model
-                                                    trust_remote_code=False, # prevents running custom model files on your machine
-                                                    revision="main") # which version of model to use in repo  # Path to your model file
-        resnet34 = load_model(model_file)
-        st.success('Model loaded successfully from seq.keras!')
+    with st.spinner('Loading model from Hugging Face...'):
+        # Load the TensorFlow model from Hugging Face
+        model_name = "your-huggingface-username/your-model-repo"  # Replace with your Hugging Face model path
+        model = TFAutoModelForSequenceClassification.from_pretrained(model_name)
+        st.success('Model loaded successfully from Hugging Face!')
 except Exception as e:
     st.error(f'Error loading model: {e}')
 
@@ -54,15 +48,15 @@ def predict_emotion(img):
     elif len(img.shape) == 2:
         img = tf.stack([img, img, img], axis=-1)  # Convert grayscale to RGB
     
-    img = tf.image.resize(img, (224, 224))  # Resize the image to 224x224 for ResNet input
+    img = tf.image.resize(img, (224, 224))  # Resize the image to 224x224 for model input
     img = tf.expand_dims(img, axis=0)  # Add batch dimension
     
     # Perform prediction
-    predicted = resnet34.predict(img)
+    predicted = model(img)
     
     # Get the predicted emotion (argmax returns the index of the highest probability)
-    emotion = classname[np.argmax(predicted[0])]  # predicted[0] since there's only one image in batch
-    probabilities = predicted[0]  # Extract the probabilities for that single prediction
+    emotion = classname[np.argmax(predicted.logits[0])]  # Use .logits for Hugging Face models
+    probabilities = tf.nn.softmax(predicted.logits[0]).numpy()  # Convert logits to probabilities
     
     return emotion, probabilities
 
